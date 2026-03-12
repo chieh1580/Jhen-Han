@@ -1,0 +1,2095 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智能餐飲系統 DEMO</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Bebas+Neue&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --panel: #151820;
+    --panel2: #1c2030;
+    --border: #2a2f42;
+    --accent: #00d4aa;
+    --accent2: #ff6b35;
+    --accent3: #7c6af7;
+    --line-green: #06C755;
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --gold: #f5a623;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans TC', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── GRID LAYOUT ─── */
+  .app {
+    display: grid;
+    grid-template-columns: 260px 1fr 320px;
+    grid-template-rows: 56px 1fr;
+    height: 100vh;
+    gap: 0;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    grid-column: 1 / -1;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 16px;
+  }
+
+  header h1 {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 22px;
+    letter-spacing: 3px;
+    color: var(--accent);
+  }
+
+  .header-badge {
+    background: var(--accent3);
+    color: white;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+
+  .header-status {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--accent);
+  }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.3); }
+  }
+
+  /* ─── SIDEBAR ─── */
+  .sidebar {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    overflow-y: auto;
+  }
+
+  .sidebar-section {
+    padding: 0 16px;
+    margin-bottom: 24px;
+  }
+
+  .sidebar-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .route-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    gap: 8px;
+    font-size: 13px;
+    transition: all 0.15s;
+    margin-bottom: 2px;
+  }
+
+  .route-item:hover { background: var(--panel2); }
+  .route-item.active { background: rgba(0,212,170,0.12); color: var(--accent); }
+
+  .route-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .route-count {
+    margin-left: auto;
+    font-size: 11px;
+    background: var(--border);
+    padding: 1px 6px;
+    border-radius: 10px;
+    color: var(--muted);
+  }
+
+  .route-count.has-order {
+    background: rgba(0,212,170,0.2);
+    color: var(--accent);
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .stat-card {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+  }
+
+  .stat-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .stat-label { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* ─── MAIN AREA ─── */
+  .main {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .demo-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel);
+    padding: 0 24px;
+  }
+
+  .tab {
+    padding: 14px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .tab-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+  }
+
+  /* ─── LINE CHAT SIMULATOR ─── */
+  .chat-wrapper {
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  .chat-header {
+    background: var(--line-green);
+    border-radius: 16px 16px 0 0;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .chat-avatar {
+    width: 36px; height: 36px;
+    background: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+
+  .chat-name { font-weight: 700; font-size: 15px; color: white; }
+  .chat-sub { font-size: 11px; color: rgba(255,255,255,0.8); }
+
+  .chat-body {
+    background: #c8d5e8;
+    min-height: 380px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+  }
+
+  .msg {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+
+  .msg.user { flex-direction: row-reverse; }
+
+  .msg-bubble {
+    max-width: 70%;
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: 14px;
+    line-height: 1.5;
+    animation: msgIn 0.3s ease;
+  }
+
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(10px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .msg.bot .msg-bubble {
+    background: white;
+    border-radius: 4px 18px 18px 18px;
+    color: #333;
+  }
+
+  .msg.user .msg-bubble {
+    background: var(--line-green);
+    color: white;
+    border-radius: 18px 4px 18px 18px;
+  }
+
+  .msg-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--line-green);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  /* Flex Card */
+  .flex-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    max-width: 280px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    animation: msgIn 0.3s ease;
+  }
+
+  .flex-header {
+    background: var(--accent2);
+    padding: 12px 16px;
+    color: white;
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  .flex-body {
+    padding: 14px 16px;
+    color: #333;
+    font-size: 13px;
+    line-height: 1.8;
+  }
+
+  .flex-row {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid #f0f0f0;
+    padding: 4px 0;
+  }
+
+  .flex-label { color: #999; font-size: 12px; }
+  .flex-val { font-weight: 600; color: #333; }
+
+  .flex-footer {
+    padding: 12px 16px;
+    display: flex;
+    gap: 8px;
+  }
+
+  .flex-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.15s;
+    font-family: 'Noto Sans TC', sans-serif;
+  }
+
+  .flex-btn.confirm {
+    background: var(--line-green);
+    color: white;
+  }
+
+  .flex-btn.confirm:hover { background: #05a948; }
+
+  .flex-btn.cancel {
+    background: #f0f0f0;
+    color: #666;
+  }
+
+  .flex-btn.cancel:hover { background: #e0e0e0; }
+
+  /* Carpool Card */
+  .carpool-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    max-width: 280px;
+    box-shadow: 0 4px 20px rgba(255,107,53,0.3);
+    animation: msgIn 0.4s ease;
+  }
+
+  .carpool-header {
+    background: linear-gradient(135deg, #ff6b35, #ff8c42);
+    padding: 14px 16px;
+    color: white;
+  }
+
+  .carpool-header h3 { font-size: 16px; font-weight: 700; }
+  .carpool-header p { font-size: 12px; opacity: 0.9; margin-top: 2px; }
+
+  .carpool-body {
+    padding: 14px 16px;
+    font-size: 13px;
+    color: #444;
+    line-height: 1.7;
+  }
+
+  .carpool-timer {
+    background: #fff3ee;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: var(--accent2);
+    font-size: 13px;
+  }
+
+  .carpool-items {
+    font-size: 12px;
+    color: #777;
+    margin-top: 8px;
+  }
+
+  .carpool-footer {
+    padding: 12px 16px;
+  }
+
+  .carpool-btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #ff6b35, #ff8c42);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: all 0.15s;
+  }
+
+  .carpool-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255,107,53,0.4); }
+
+  /* Chat Input */
+  .chat-input-area {
+    background: #f5f5f5;
+    padding: 10px 12px;
+    border-radius: 0 0 16px 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .chat-input {
+    flex: 1;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    padding: 8px 14px;
+    font-size: 14px;
+    outline: none;
+    font-family: 'Noto Sans TC', sans-serif;
+    color: #333;
+  }
+
+  .chat-send {
+    width: 36px; height: 36px;
+    background: var(--line-green);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    transition: all 0.15s;
+  }
+
+  .chat-send:hover { transform: scale(1.1); }
+
+  /* Scenario Buttons */
+  .scenario-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .scenario-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--panel2);
+    color: var(--text);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Noto Sans TC', sans-serif;
+  }
+
+  .scenario-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .scenario-btn.active {
+    background: rgba(0,212,170,0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* ─── RIGHT PANEL ─── */
+  .right-panel {
+    background: var(--panel);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .right-panel-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .log-stream {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .log-entry {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border-left: 3px solid transparent;
+    animation: logIn 0.2s ease;
+    line-height: 1.5;
+  }
+
+  @keyframes logIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .log-info { border-color: var(--accent3); color: #a8b4ff; background: rgba(124,106,247,0.08); }
+  .log-success { border-color: var(--accent); color: #6effd8; background: rgba(0,212,170,0.08); }
+  .log-warn { border-color: var(--gold); color: #ffd080; background: rgba(245,166,35,0.08); }
+  .log-push { border-color: var(--accent2); color: #ffb080; background: rgba(255,107,53,0.08); }
+
+  .log-time { color: var(--muted); margin-right: 6px; }
+
+  /* DB Viewer */
+  .db-section { margin-bottom: 20px; }
+  .db-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent3);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .db-table {
+    width: 100%;
+    font-size: 11px;
+    border-collapse: collapse;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .db-table th {
+    background: var(--panel2);
+    padding: 6px 8px;
+    text-align: left;
+    color: var(--muted);
+    font-size: 10px;
+    border: 1px solid var(--border);
+  }
+
+  .db-table td {
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+
+  .db-table tr:hover td { background: var(--panel2); }
+
+  .badge {
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .badge-pending { background: rgba(245,166,35,0.2); color: var(--gold); }
+  .badge-confirmed { background: rgba(0,212,170,0.2); color: var(--accent); }
+  .badge-cancelled { background: rgba(255,100,100,0.2); color: #ff6b6b; }
+
+  .new-row { animation: rowIn 0.5s ease; }
+
+  @keyframes rowIn {
+    from { background: rgba(0,212,170,0.2); }
+    to { background: transparent; }
+  }
+
+  /* LLM Panel */
+  .llm-box {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .llm-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .llm-text {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    min-height: 60px;
+    white-space: pre-wrap;
+  }
+
+  .llm-arrow {
+    text-align: center;
+    color: var(--accent3);
+    font-size: 20px;
+    margin: 8px 0;
+  }
+
+  .json-key { color: #7c6af7; }
+  .json-str { color: #f5a623; }
+  .json-num { color: #00d4aa; }
+
+  /* Carpool flow */
+  .flow-step {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    align-items: flex-start;
+  }
+
+  .flow-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--accent3);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .flow-num.done { background: var(--accent); }
+  .flow-num.active { background: var(--accent2); animation: pulse 1s infinite; }
+
+  .flow-content { flex: 1; }
+  .flow-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .flow-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .flow-code {
+    margin-top: 6px;
+    background: var(--bg);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    line-height: 1.6;
+  }
+
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 8px 0 16px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent3), var(--accent));
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+
+  /* Typing indicator */
+  .typing {
+    display: flex;
+    gap: 4px;
+    padding: 10px 14px;
+    background: white;
+    border-radius: 4px 18px 18px 18px;
+    width: fit-content;
+  }
+
+  .typing span {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #bbb;
+    animation: typingDot 1.2s infinite;
+  }
+
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes typingDot {
+    0%,60%,100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+  }
+
+  /* Notification Toast */
+  .toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--panel);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 13px;
+    z-index: 1000;
+    display: none;
+    max-width: 300px;
+    box-shadow: 0 8px 30px rgba(0,212,170,0.2);
+    animation: toastIn 0.3s ease;
+  }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .toast.show { display: block; }
+  .toast-title { font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+  .toast-body { color: var(--muted); line-height: 1.5; }
+
+  /* Hidden tabs */
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  .hidden { display: none !important; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* ─── MINI PHONE (carpool recipient view) ─── */
+  .mini-phone {
+    background: #1a1a2e;
+    border-radius: 20px;
+    border: 2px solid #2d2d4e;
+    overflow: hidden;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    animation: phoneSlideIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  @keyframes phoneSlideIn {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .mini-phone-bar {
+    background: #111;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 10px;
+    color: #888;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .mini-phone-notif {
+    background: white;
+    margin: 0;
+  }
+
+  .notif-banner {
+    background: #f5f5f5;
+    padding: 10px 14px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    border-bottom: 1px solid #e0e0e0;
+    animation: notifDrop 0.4s ease;
+  }
+
+  @keyframes notifDrop {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .notif-icon {
+    width: 36px; height: 36px;
+    background: var(--line-green);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .notif-text-app { font-size: 10px; font-weight: 700; color: #999; }
+  .notif-text-title { font-size: 13px; font-weight: 700; color: #222; margin: 1px 0; }
+  .notif-text-body { font-size: 11px; color: #555; line-height: 1.4; }
+  .notif-time { font-size: 10px; color: #bbb; margin-left: auto; flex-shrink: 0; }
+
+  .mini-chat-body {
+    background: #c8d5e8;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .mini-msg-bubble {
+    background: white;
+    border-radius: 4px 14px 14px 14px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: #333;
+    line-height: 1.5;
+    max-width: 85%;
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+  }
+
+  .mini-avatar {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--line-green);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .mini-carpool-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    max-width: 220px;
+    margin-left: 30px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+    animation: msgIn 0.4s ease;
+  }
+
+  .mini-carpool-header {
+    background: linear-gradient(135deg, #ff6b35, #ff8c42);
+    padding: 10px 12px;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .mini-carpool-body {
+    padding: 10px 12px;
+    font-size: 11px;
+    color: #444;
+    line-height: 1.6;
+  }
+
+  .mini-carpool-timer {
+    background: #fff3ee;
+    border-radius: 6px;
+    padding: 5px 8px;
+    margin: 6px 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent2);
+  }
+
+  .mini-carpool-footer {
+    padding: 8px 12px;
+  }
+
+  .mini-carpool-btn {
+    width: 100%;
+    padding: 8px;
+    background: linear-gradient(135deg, #ff6b35, #ff8c42);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+  }
+
+  .mini-reply-bubble {
+    background: var(--line-green);
+    border-radius: 14px 4px 14px 14px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: white;
+    max-width: 80%;
+    align-self: flex-end;
+    animation: msgIn 0.3s ease;
+  }
+
+  .recipient-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+
+  .recipient-emoji {
+    font-size: 14px;
+  }
+
+  /* Carpool notification panel */
+  .notif-group {
+    margin-bottom: 16px;
+  }
+
+  .notif-item {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    animation: rowIn 0.5s ease;
+  }
+
+  .notif-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .notif-name { font-weight: 600; color: var(--text); }
+  .notif-detail { color: var(--muted); }
+  .notif-status { margin-left: auto; }
+
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <header>
+    <h1>🍱 FoodRoute OS</h1>
+    <span class="header-badge">DEMO</span>
+    <div style="font-size:12px;color:var(--muted);margin-left:8px;">智能餐飲訂餐與物流系統</div>
+    <div class="header-status">
+      <div class="status-dot"></div>
+      系統運行中 · LINE Bot 已連線
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">📊 今日概況</div>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-val" id="statOrders">0</div>
+          <div class="stat-label">訂單數</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statRevenue">$0</div>
+          <div class="stat-label">營收</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statPush">0</div>
+          <div class="stat-label">推播次數</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statCarpool">0</div>
+          <div class="stat-label">併單次數</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">🚗 配送路線</div>
+      <div id="routeList"></div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">🍽 菜單庫存</div>
+      <div id="menuStock"></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="demo-tabs">
+      <div class="tab active" onclick="switchTab('chat')">💬 LINE 對話模擬</div>
+      <div class="tab" onclick="switchTab('llm')">🧠 LLM 解析過程</div>
+      <div class="tab" onclick="switchTab('carpool')">🚗 順風車機制</div>
+      <div class="tab" onclick="switchTab('db')">🗄 資料庫即時檢視</div>
+    </div>
+
+    <div class="tab-content">
+
+      <!-- TAB: CHAT -->
+      <div id="tab-chat" class="tab-pane active">
+        <div class="scenario-bar">
+          <div class="sidebar-title" style="align-self:center">情境：</div>
+          <button class="scenario-btn active" onclick="loadScenario('order')">① 一般點餐 + 順風車</button>
+          <button class="scenario-btn" onclick="loadScenario('typo')">② 錯別字修正</button>
+          <button class="scenario-btn" onclick="loadScenario('reactivation')">③ 3天喚醒</button>
+          <button class="scenario-btn" onclick="resetChat()">🔄 重置</button>
+        </div>
+
+        <!-- DUAL CHAT LAYOUT -->
+        <div style="display:flex;gap:16px;align-items:flex-start;">
+
+          <!-- LEFT: 下單者 陳小明 -->
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+              <span style="width:8px;height:8px;border-radius:50%;background:var(--line-green);display:inline-block;"></span>
+              陳小明（下單顧客）
+            </div>
+            <div class="chat-wrapper" style="max-width:100%;">
+              <div class="chat-header">
+                <div class="chat-avatar">🍱</div>
+                <div>
+                  <div class="chat-name">美味快送</div>
+                  <div class="chat-sub">AI 智能點餐助理</div>
+                </div>
+                <div style="margin-left:auto;background:rgba(255,255,255,0.2);padding:4px 10px;border-radius:20px;font-size:11px;color:white;">LINE Official</div>
+              </div>
+              <div class="chat-body" id="chatBody" style="min-height:320px;">
+                <div class="msg bot">
+                  <div class="msg-avatar">🤖</div>
+                  <div class="msg-bubble">哈囉！歡迎光臨美味快送 🍱<br>請直接告訴我您要點什麼，我會幫您確認訂單！</div>
+                </div>
+              </div>
+              <div class="chat-input-area">
+                <input class="chat-input" id="chatInput" placeholder="輸入點餐訊息..." onkeydown="if(event.key==='Enter')sendMsg()" />
+                <button class="chat-send" onclick="sendMsg()">➤</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: 被推播的顧客們 -->
+          <div style="flex:1;min-width:0;" id="carpoolPanel">
+            <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+              <span style="width:8px;height:8px;border-radius:50%;background:var(--accent2);display:inline-block;" id="carpoolDot"></span>
+              同路線顧客（收到推播）
+              <span id="carpoolPanelBadge" style="display:none;background:rgba(255,107,53,0.2);color:var(--accent2);font-size:10px;padding:2px 8px;border-radius:10px;margin-left:4px;">順風車推播中</span>
+            </div>
+
+            <!-- 等待狀態 -->
+            <div id="carpoolWaiting" style="background:var(--panel2);border:1px dashed var(--border);border-radius:16px;padding:40px 24px;text-align:center;color:var(--muted);font-size:13px;">
+              <div style="font-size:32px;margin-bottom:12px;opacity:0.4;">🚗</div>
+              <div>等待下單者確認訂單後</div>
+              <div style="font-size:12px;margin-top:4px;">系統將自動推播同路線顧客</div>
+            </div>
+
+            <!-- 推播中動畫 -->
+            <div id="carpoolSending" style="display:none;background:var(--panel2);border:1px solid var(--accent2);border-radius:16px;padding:16px 20px;margin-bottom:12px;">
+              <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--accent2);font-weight:600;">
+                <span style="animation:pulse 0.8s infinite;font-size:18px;">📡</span>
+                系統正在批次發送 LINE 推播...
+              </div>
+              <div style="font-size:11px;color:var(--muted);margin-top:6px;font-family:'JetBrains Mono',monospace;">
+                check_carpool_trigger() → 發現 3 位目標顧客
+              </div>
+            </div>
+
+            <!-- 顧客手機清單 -->
+            <div id="carpoolPhones" style="display:none;flex-direction:column;gap:10px;"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- TAB: LLM -->
+      <div id="tab-llm" class="tab-pane">
+        <div style="max-width:600px">
+          <div class="llm-box">
+            <div class="llm-label">📥 使用者原始訊息</div>
+            <div class="llm-text" id="llmInput" style="color:var(--muted)">等待使用者輸入...</div>
+          </div>
+          <div class="llm-arrow">⬇ GPT-4o-mini 語意解析</div>
+          <div class="llm-box">
+            <div class="llm-label">🧠 LLM System Prompt</div>
+            <div class="llm-text" style="font-size:11px;color:var(--muted)">你是餐飲訂餐系統的訂單解析助理。
+請將口語化點餐訊息解析為標準 JSON。
+若有錯別字請自動修正。
+回傳格式：{customer_name, phone, address, items:[{name, quantity}]}</div>
+          </div>
+          <div class="llm-arrow">⬇ 解析結果</div>
+          <div class="llm-box">
+            <div class="llm-label">✅ 結構化 JSON 輸出</div>
+            <div class="llm-text" id="llmOutput" style="color:var(--muted)">等待解析...</div>
+          </div>
+          <div class="llm-arrow" id="llmMatchArrow" style="display:none">⬇ 比對菜單庫存</div>
+          <div class="llm-box" id="llmMatchBox" style="display:none">
+            <div class="llm-label">🔍 品項比對結果</div>
+            <div class="llm-text" id="llmMatch"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: CARPOOL -->
+      <div id="tab-carpool" class="tab-pane">
+        <div style="display:flex;gap:24px;height:100%;align-items:flex-start;">
+
+          <!-- LEFT: flow steps -->
+          <div style="width:320px;flex-shrink:0;">
+            <div style="margin-bottom:16px;">
+              <div class="sidebar-title">🚗 順風車機制觸發流程</div>
+              <div class="progress-bar"><div class="progress-fill" id="carpoolProgress" style="width:0%"></div></div>
+            </div>
+
+            <div class="flow-step">
+              <div class="flow-num" id="stepNum1">1</div>
+              <div class="flow-content">
+                <div class="flow-title">訂單確認成立</div>
+                <div class="flow-desc">路線A 收到陳小明的確認訂單（雞腿飯×2，$420）</div>
+                <div class="flow-code" id="stepCode1" style="display:none">order.status = "confirmed"
+order.route_id = "route_A"
+order.total_amount = 420</div>
+              </div>
+            </div>
+
+            <div class="flow-step">
+              <div class="flow-num" id="stepNum2">2</div>
+              <div class="flow-content">
+                <div class="flow-title">達標門檻判斷</div>
+                <div class="flow-desc">金額 ≥ $300 且尚在截單時間前</div>
+                <div class="flow-code" id="stepCode2" style="display:none">420 >= 300 ✅
+dispatch: 12:00 / cutoff: 10:30
+now: 09:15 → ✅ 尚在截單前</div>
+              </div>
+            </div>
+
+            <div class="flow-step">
+              <div class="flow-num" id="stepNum3">3</div>
+              <div class="flow-content">
+                <div class="flow-title">首筆檢查（防重複）</div>
+                <div class="flow-desc">確認今日路線A尚未觸發過推播</div>
+                <div class="flow-code" id="stepCode3" style="display:none">SELECT COUNT(*) FROM orders
+WHERE route_id='A'
+AND is_baseline_order=TRUE
+→ 0 筆 ✅ 今日首筆！</div>
+              </div>
+            </div>
+
+            <div class="flow-step">
+              <div class="flow-num" id="stepNum4">4</div>
+              <div class="flow-content">
+                <div class="flow-title">撈取目標顧客</div>
+                <div class="flow-desc">同路線 + 今日未下單 + 有歷史消費</div>
+                <div class="flow-code" id="stepCode4" style="display:none">找到 3 位目標顧客：
+  · 林小美 (U001) 3天前
+  · 王大偉 (U002) 5天前
+  · 張阿花 (U003) 7天前</div>
+              </div>
+            </div>
+
+            <div class="flow-step">
+              <div class="flow-num" id="stepNum5">5</div>
+              <div class="flow-content">
+                <div class="flow-title">批次發送 LINE 推播</div>
+                <div class="flow-desc">發送順風車 Flex Message，右側可見顧客收到的畫面</div>
+                <div id="carpoolTargets" style="display:none;margin-top:8px;">
+                  <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">推播狀態：</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top:20px;">
+              <button onclick="runCarpoolDemo()" id="carpoolDemoBtn" style="background:linear-gradient(135deg,var(--accent3),var(--accent));color:white;border:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">
+                ▶ 執行順風車流程 DEMO
+              </button>
+            </div>
+          </div>
+
+          <!-- RIGHT: phone screens -->
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+              <span>📱 顧客收到的 LINE 畫面</span>
+              <span id="carpoolPhonesBadge" style="display:none;background:rgba(255,107,53,0.2);color:var(--accent2);font-size:10px;padding:2px 8px;border-radius:10px;">推播中...</span>
+            </div>
+
+            <!-- Waiting placeholder -->
+            <div id="carpoolPhonesWaiting" style="background:var(--panel2);border:1px dashed var(--border);border-radius:16px;padding:60px 24px;text-align:center;color:var(--muted);">
+              <div style="font-size:40px;margin-bottom:14px;opacity:0.3;">📱📱📱</div>
+              <div style="font-size:14px;font-weight:600;">按左側按鈕執行 DEMO</div>
+              <div style="font-size:12px;margin-top:6px;">Step 5 完成後，顧客手機畫面將在這裡出現</div>
+            </div>
+
+            <!-- Phone screens container -->
+            <div id="carpoolPhonesGrid" style="display:none;flex-direction:column;gap:16px;overflow-y:auto;max-height:calc(100vh - 200px);padding-bottom:20px;"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- TAB: DB -->
+      <div id="tab-db" class="tab-pane">
+        <div class="db-section">
+          <div class="db-title">📋 orders</div>
+          <table class="db-table">
+            <thead>
+              <tr>
+                <th>id</th><th>user</th><th>route</th><th>items</th><th>amount</th><th>status</th><th>baseline</th><th>created_at</th>
+              </tr>
+            </thead>
+            <tbody id="dbOrders">
+              <tr><td colspan="8" style="color:var(--muted);text-align:center;padding:16px">尚無訂單</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="db-section" style="margin-top:20px">
+          <div class="db-title">📤 push_logs</div>
+          <table class="db-table">
+            <thead>
+              <tr><th>id</th><th>user</th><th>type</th><th>route</th><th>sent_at</th></tr>
+            </thead>
+            <tbody id="dbPushLogs">
+              <tr><td colspan="5" style="color:var(--muted);text-align:center;padding:16px">尚無推播紀錄</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="db-section" style="margin-top:20px">
+          <div class="db-title">👤 users</div>
+          <table class="db-table">
+            <thead>
+              <tr><th>id</th><th>name</th><th>route</th><th>last_ordered_at</th></tr>
+            </thead>
+            <tbody id="dbUsers">
+              <tr>
+                <td>1</td><td>陳小明</td><td>路線A</td><td style="color:var(--muted)">—</td>
+              </tr>
+              <tr>
+                <td>2</td><td>林小美</td><td>路線A</td><td style="color:var(--muted)">3天前</td>
+              </tr>
+              <tr>
+                <td>3</td><td>王大偉</td><td>路線A</td><td style="color:var(--muted)">5天前</td>
+              </tr>
+              <tr>
+                <td>4</td><td>張阿花</td><td>路線A</td><td style="color:var(--muted)">7天前</td>
+              </tr>
+              <tr>
+                <td>5</td><td>李小華</td><td>路線B</td><td style="color:var(--muted)">今天</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL: LOG -->
+  <div class="right-panel">
+    <div class="right-panel-header">⚡ 系統事件日誌</div>
+    <div class="log-stream" id="logStream">
+      <div class="log-entry log-info"><span class="log-time">09:00:00</span>FastAPI server started · port 8000</div>
+      <div class="log-entry log-success"><span class="log-time">09:00:01</span>LINE Webhook registered ✓</div>
+      <div class="log-entry log-success"><span class="log-time">09:00:01</span>PostgreSQL connected ✓</div>
+      <div class="log-entry log-info"><span class="log-time">09:00:02</span>APScheduler started · 2 jobs</div>
+      <div class="log-entry log-success"><span class="log-time">09:00:02</span>系統就緒，等待點餐訊息...</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-title" id="toastTitle"></div>
+  <div class="toast-body" id="toastBody"></div>
+</div>
+
+<script>
+// ─── STATE ───
+const state = {
+  orders: [],
+  pushLogs: [],
+  orderIdCounter: 1,
+  pushIdCounter: 1,
+  stats: { orders: 0, revenue: 0, push: 0, carpool: 0 },
+  carpoolStep: 0,
+};
+
+const routes = [
+  { id: 'A', name: '路線A (北區)', color: '#00d4aa', orders: 0 },
+  { id: 'B', name: '路線B (中區)', color: '#7c6af7', orders: 0 },
+  { id: 'C', name: '路線C (南區)', color: '#ff6b35', orders: 0 },
+  { id: 'D', name: '路線D (東區)', color: '#f5a623', orders: 0 },
+];
+
+const menu = [
+  { name: '雞腿飯', price: 110, stock: 20 },
+  { name: '排骨飯', price: 100, stock: 15 },
+  { name: '控肉飯', price: 95, stock: 8 },
+  { name: '魯肉飯', price: 65, stock: 30 },
+  { name: '炸雞便當', price: 130, stock: 12 },
+];
+
+const scenarios = {
+  order: { msg: '我要訂2個雞腿飯，1個排骨飯，送到台北市信義路100號，我是陳小明，電話0912-345-678' },
+  typo: { msg: '要2個雞腿板跟1份魯肉佛，我叫王大偉 0933222111，送信義路200號' },
+  reactivation: { msg: null, special: 'reactivation' },
+};
+
+// ─── INIT ───
+function init() {
+  renderRoutes();
+  renderMenuStock();
+}
+
+function renderRoutes() {
+  document.getElementById('routeList').innerHTML = routes.map(r => `
+    <div class="route-item ${r.orders > 0 ? 'active' : ''}">
+      <div class="route-dot" style="background:${r.color}"></div>
+      <span style="font-size:12px">${r.name}</span>
+      <span class="route-count ${r.orders > 0 ? 'has-order' : ''}">${r.orders}</span>
+    </div>
+  `).join('');
+}
+
+function renderMenuStock() {
+  document.getElementById('menuStock').innerHTML = menu.map(m => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:12px;border-bottom:1px solid var(--border)">
+      <span>${m.name}</span>
+      <span style="color:${m.stock > 10 ? 'var(--accent)' : m.stock > 5 ? 'var(--gold)' : '#ff6b6b'};font-family:'JetBrains Mono',monospace;font-size:11px">
+        ${m.stock > 0 ? `${m.stock} 份` : '售完'}
+      </span>
+    </div>
+  `).join('');
+}
+
+// ─── TABS ───
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    t.classList.toggle('active', ['chat','llm','carpool','db'][i] === name);
+  });
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+}
+
+// ─── SCENARIO BUTTONS ───
+function loadScenario(key) {
+  document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  resetChat();
+
+  const s = scenarios[key];
+  if (s.special === 'reactivation') {
+    setTimeout(() => {
+      addBotMsg('⏰ 系統排程觸發：發現 2 位顧客超過 3 天未點餐，發送喚醒訊息...');
+      addLog('warn', '喚醒排程觸發：找到 2 位沉睡顧客');
+      // Show reactivation in right panel
+      showReactivationInPanel();
+      setTimeout(() => {
+        addLog('push', '推播→ 張阿花：已送出喚醒優惠');
+        addLog('push', '推播→ 王大偉：已送出喚醒優惠');
+        updateStat('push', 2);
+      }, 2000);
+    }, 600);
+    return;
+  }
+  if (s.msg) {
+    document.getElementById('chatInput').value = s.msg;
+  }
+}
+
+function resetChat() {
+  document.getElementById('chatBody').innerHTML = `
+    <div class="msg bot">
+      <div class="msg-avatar">🤖</div>
+      <div class="msg-bubble">哈囉！歡迎光臨美味快送 🍱<br>請直接告訴我您要點什麼，我會幫您確認訂單！</div>
+    </div>
+  `;
+  document.getElementById('chatInput').value = '';
+  // Reset carpool panel
+  document.getElementById('carpoolWaiting').style.display = 'block';
+  document.getElementById('carpoolSending').style.display = 'none';
+  document.getElementById('carpoolPhones').style.display = 'none';
+  document.getElementById('carpoolPhones').innerHTML = '';
+  document.getElementById('carpoolPanelBadge').style.display = 'none';
+  // Reset LLM tab
+  document.getElementById('llmInput').textContent = '等待使用者輸入...';
+  document.getElementById('llmInput').style.color = 'var(--muted)';
+  document.getElementById('llmOutput').textContent = '等待解析...';
+  document.getElementById('llmOutput').style.color = 'var(--muted)';
+  document.getElementById('llmMatchArrow').style.display = 'none';
+  document.getElementById('llmMatchBox').style.display = 'none';
+}
+
+// ─── CHAT ───
+function sendMsg() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  addUserMsg(text);
+  addLog('info', `LINE Webhook 收到訊息：「${text.slice(0,30)}...」`);
+
+  // Show typing
+  const typingId = showTyping();
+
+  setTimeout(() => {
+    removeTyping(typingId);
+    processMessage(text);
+  }, 1500);
+}
+
+function processMessage(text) {
+  // LLM parse
+  const parsed = simulateLLMParse(text);
+
+  // Update LLM tab
+  document.getElementById('llmInput').textContent = text;
+  document.getElementById('llmInput').style.color = 'var(--text)';
+  addLog('info', 'LLM 解析中... (GPT-4o-mini)');
+
+  setTimeout(() => {
+    const jsonStr = formatJSON(parsed);
+    document.getElementById('llmOutput').innerHTML = jsonStr;
+    document.getElementById('llmOutput').style.color = 'var(--text)';
+    addLog('success', `LLM 解析完成：${parsed.customer_name}，${parsed.items.length} 項商品`);
+
+    // Show match
+    document.getElementById('llmMatchArrow').style.display = 'block';
+    document.getElementById('llmMatchBox').style.display = 'block';
+    const matchResult = parsed.items.map(item => {
+      const found = menu.find(m => m.name === item.name);
+      return `${found ? '✅' : '❌'} ${item.name} x${item.quantity} → ${found ? `有庫存(${found.stock}份)` : '未找到品項'}`;
+    }).join('\n');
+    document.getElementById('llmMatch').textContent = matchResult;
+
+    // Show flex card
+    showOrderConfirmCard(parsed);
+  }, 800);
+}
+
+function simulateLLMParse(text) {
+  // 模擬 LLM 解析（含錯別字修正）
+  const corrections = {
+    '雞腿板': '雞腿飯',
+    '魯肉佛': '魯肉飯',
+    '排骨板': '排骨飯',
+  };
+
+  let corrected = text;
+  for (const [wrong, right] of Object.entries(corrections)) {
+    corrected = corrected.replace(new RegExp(wrong, 'g'), right);
+  }
+
+  const nameMatch = corrected.match(/我(?:是|叫)([^\s，,。0-9]+)/);
+  const phoneMatch = corrected.match(/(\d{4}[-－]?\d{3}[-－]?\d{3}|\d{10})/);
+  const addrMatch = corrected.match(/(?:送到|送|地址)(.+?)(?:[，,。]|$)/);
+
+  const items = [];
+  const itemPatterns = [
+    { re: /(\d+)[個份]?(雞腿飯)/, name: '雞腿飯' },
+    { re: /(\d+)[個份]?(排骨飯)/, name: '排骨飯' },
+    { re: /(\d+)[個份]?(魯肉飯)/, name: '魯肉飯' },
+    { re: /(\d+)[個份]?(控肉飯)/, name: '控肉飯' },
+    { re: /(\d+)[個份]?(炸雞便當)/, name: '炸雞便當' },
+  ];
+
+  for (const p of itemPatterns) {
+    const m = corrected.match(p.re);
+    if (m) items.push({ name: p.name, quantity: parseInt(m[1]) });
+  }
+
+  if (items.length === 0) {
+    items.push({ name: '雞腿飯', quantity: 1 });
+  }
+
+  return {
+    customer_name: nameMatch ? nameMatch[1].trim() : '顧客',
+    phone: phoneMatch ? phoneMatch[0] : '0912-345-678',
+    address: addrMatch ? addrMatch[1].trim() : '台北市信義路100號',
+    items,
+  };
+}
+
+function formatJSON(obj) {
+  const j = JSON.stringify(obj, null, 2);
+  return j
+    .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
+    .replace(/: "([^"]+)"/g, ': <span class="json-str">"$1"</span>')
+    .replace(/: (\d+)/g, ': <span class="json-num">$1</span>');
+}
+
+function showOrderConfirmCard(parsed) {
+  const total = parsed.items.reduce((sum, item) => {
+    const m = menu.find(m2 => m2.name === item.name);
+    return sum + (m ? m.price * item.quantity : 0);
+  }, 0);
+
+  const itemsHtml = parsed.items.map(item =>
+    `<div class="flex-row"><span class="flex-label">${item.name} x${item.quantity}</span>
+     <span class="flex-val">$${(menu.find(m=>m.name===item.name)?.price||0)*item.quantity}</span></div>`
+  ).join('');
+
+  const cardHtml = `
+    <div class="msg bot">
+      <div class="msg-avatar">🤖</div>
+      <div class="flex-card">
+        <div class="flex-header">📋 訂單確認</div>
+        <div class="flex-body">
+          <div class="flex-row"><span class="flex-label">姓名</span><span class="flex-val">${parsed.customer_name}</span></div>
+          <div class="flex-row"><span class="flex-label">電話</span><span class="flex-val">${parsed.phone}</span></div>
+          <div class="flex-row"><span class="flex-label">地址</span><span class="flex-val" style="font-size:11px">${parsed.address}</span></div>
+          ${itemsHtml}
+          <div class="flex-row" style="border:none;margin-top:4px"><span class="flex-label" style="font-weight:700">合計</span><span class="flex-val" style="color:var(--accent2);font-size:15px">$${total}</span></div>
+          <div style="font-size:11px;color:#aaa;margin-top:8px">🕐 預計送達：約 45-60 分鐘</div>
+        </div>
+        <div class="flex-footer">
+          <button class="flex-btn confirm" onclick="confirmOrder(${JSON.stringify(parsed).replace(/"/g,'&quot;')}, ${total})">✓ 確認下單</button>
+          <button class="flex-btn cancel" onclick="cancelOrder()">✕ 取消</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('chatBody').insertAdjacentHTML('beforeend', cardHtml);
+  scrollChat();
+  addLog('info', `Flex Message 已送出確認卡 (合計 $${total})`);
+}
+
+function confirmOrder(parsed, total) {
+  // Remove buttons
+  document.querySelectorAll('.flex-btn').forEach(b => b.disabled = true);
+
+  addUserMsg('確認下單 ✓');
+  addLog('success', `訂單確認！寫入 DB...`);
+
+  // Add to DB
+  const orderId = state.orderIdCounter++;
+  const isBaseline = total >= 300 && routes[0].orders === 0;
+
+  state.orders.push({
+    id: orderId,
+    user: parsed.customer_name,
+    route: '路線A',
+    items: parsed.items.map(i => `${i.name}x${i.quantity}`).join(', '),
+    amount: total,
+    status: 'confirmed',
+    baseline: isBaseline,
+    time: new Date().toLocaleTimeString('zh-TW'),
+  });
+
+  updateDbOrders();
+  updateStat('orders', 1);
+  updateStat('revenue', total);
+
+  routes[0].orders++;
+  renderRoutes();
+
+  parsed.items.forEach(item => {
+    const m = menu.find(m2 => m2.name === item.name);
+    if (m) m.stock = Math.max(0, m.stock - item.quantity);
+  });
+  renderMenuStock();
+
+  document.querySelector('#dbUsers tr:first-child td:last-child').textContent = '剛才';
+
+  setTimeout(() => {
+    addBotMsg(`✅ 訂單已成立！\n訂單編號：#${orderId}\n預計 ${new Date(Date.now()+3600000).toLocaleTimeString('zh-TW')} 前送達\n感謝您的訂購！🙏`);
+
+    if (isBaseline) {
+      // Trigger carpool push to recipient phones
+      setTimeout(() => {
+        addLog('warn', `check_carpool_trigger(order_id=${orderId}) 觸發`);
+        addLog('warn', `路線A 今日首筆達標訂單 → 啟動順風車推播流程`);
+        triggerCarpoolRecipients(orderId);
+      }, 1200);
+    }
+  }, 500);
+
+  scrollChat();
+}
+
+async function triggerCarpoolRecipients(orderId) {
+  // Show "sending" state
+  document.getElementById('carpoolWaiting').style.display = 'none';
+  document.getElementById('carpoolSending').style.display = 'block';
+  document.getElementById('carpoolPanelBadge').style.display = 'inline-block';
+
+  await sleep(1500);
+
+  document.getElementById('carpoolSending').style.display = 'none';
+  const phonesEl = document.getElementById('carpoolPhones');
+  phonesEl.style.display = 'flex';
+
+  const recipients = [
+    { name: '林小美', emoji: '👩', lastOrder: '3天前', reply: '好的，我要加點一個排骨飯！' },
+    { name: '王大偉', emoji: '👨', lastOrder: '5天前', reply: null },
+    { name: '張阿花', emoji: '👵', lastOrder: '7天前', reply: '太好了！幫我加一個魯肉飯謝謝' },
+  ];
+
+  addLog('push', `撈取同路線目標顧客：${recipients.map(r=>r.name).join('、')}`);
+
+  for (let i = 0; i < recipients.length; i++) {
+    const r = recipients[i];
+    await sleep(i * 800 + 200);
+
+    // Push log to DB
+    state.pushLogs.push({
+      id: state.pushIdCounter++,
+      user: r.name,
+      type: 'carpool',
+      route: '路線A',
+      time: new Date().toLocaleTimeString('zh-TW'),
+    });
+    updateDbPushLogs();
+    addLog('push', `✓ 推播成功 → ${r.name}`);
+    updateStat('push', 1);
+
+    // Render mini phone
+    const phoneEl = document.createElement('div');
+    phoneEl.innerHTML = buildMiniPhone(r, i);
+    phonesEl.appendChild(phoneEl);
+
+    // After phone appears, maybe show reply
+    if (r.reply) {
+      await sleep(1800 + i * 300);
+      const replyTarget = document.getElementById(`miniChat_${i}`);
+      if (replyTarget) {
+        const replyEl = document.createElement('div');
+        replyEl.className = 'mini-reply-bubble';
+        replyEl.textContent = r.reply;
+        replyTarget.appendChild(replyEl);
+        addLog('success', `${r.name} 回覆：「${r.reply.slice(0,15)}...」`);
+      }
+    }
+  }
+
+  updateStat('carpool', 1);
+  state.orders[state.orders.length - 1].baseline = true;
+  updateDbOrders();
+  showToast('🚗 順風車推播完成', '3 位顧客已收到推播，2 位回覆加點！');
+}
+
+function buildMiniPhone(r, idx) {
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('zh-TW', {hour:'2-digit',minute:'2-digit'});
+  return `
+    <div>
+      <div class="recipient-label">
+        <span class="recipient-emoji">${r.emoji}</span>
+        ${r.name}（上次點餐：${r.lastOrder}）
+      </div>
+      <div class="mini-phone">
+        <div class="mini-phone-bar">
+          <span>${timeStr}</span>
+          <span>📶 LINE</span>
+        </div>
+        <!-- Notification banner -->
+        <div class="notif-banner">
+          <div class="notif-icon">🍱</div>
+          <div style="flex:1">
+            <div class="notif-text-app">美味快送 · LINE Official</div>
+            <div class="notif-text-title">🚗 順風車免運加點</div>
+            <div class="notif-text-body">路線A 今日配送出發前 75 分鐘截單！</div>
+          </div>
+          <div class="notif-time">${timeStr}</div>
+        </div>
+        <!-- Mini LINE Chat -->
+        <div class="mini-chat-body" id="miniChat_${idx}">
+          <div style="display:flex;gap:6px;align-items:flex-start;">
+            <div class="mini-avatar">🤖</div>
+            <div class="mini-carpool-card">
+              <div class="mini-carpool-header">🚗 順風車免運加點</div>
+              <div class="mini-carpool-body">
+                加入今日配送享<strong style="color:#ff6b35">免運費</strong>優惠 🎉
+                <div class="mini-carpool-timer">⏰ 距截單還有 75 分鐘</div>
+                <div style="font-size:10px;color:#999;">• 雞腿飯 $110<br>• 排骨飯 $100<br>• 魯肉飯 $65</div>
+              </div>
+              <div class="mini-carpool-footer">
+                <button class="mini-carpool-btn">立即加點 🛵</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function showReactivationInPanel() {
+  document.getElementById('carpoolWaiting').style.display = 'none';
+  document.getElementById('carpoolPanelBadge').textContent = '3天喚醒推播';
+  document.getElementById('carpoolPanelBadge').style.display = 'inline-block';
+  document.getElementById('carpoolPanelBadge').style.background = 'rgba(124,106,247,0.2)';
+  document.getElementById('carpoolPanelBadge').style.color = 'var(--accent3)';
+
+  const phonesEl = document.getElementById('carpoolPhones');
+  phonesEl.style.display = 'flex';
+
+  const recipients = [
+    { name: '張阿花', emoji: '👵', lastOrder: '7天前' },
+    { name: '王大偉', emoji: '👨', lastOrder: '5天前' },
+  ];
+
+  setTimeout(async () => {
+    for (let i = 0; i < recipients.length; i++) {
+      const r = recipients[i];
+      await sleep(i * 900);
+      const phoneEl = document.createElement('div');
+      phoneEl.innerHTML = buildReactivationPhone(r, i);
+      phonesEl.appendChild(phoneEl);
+    }
+  }, 800);
+}
+
+function buildReactivationPhone(r, idx) {
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('zh-TW', {hour:'2-digit',minute:'2-digit'});
+  return `
+    <div>
+      <div class="recipient-label">
+        <span class="recipient-emoji">${r.emoji}</span>
+        ${r.name}（上次點餐：${r.lastOrder}）
+      </div>
+      <div class="mini-phone">
+        <div class="mini-phone-bar">
+          <span>${timeStr}</span><span>📶 LINE</span>
+        </div>
+        <div class="notif-banner">
+          <div class="notif-icon" style="background:#7c6af7">🍱</div>
+          <div style="flex:1">
+            <div class="notif-text-app">美味快送 · LINE Official</div>
+            <div class="notif-text-title">💌 好久不見，我們想你了！</div>
+            <div class="notif-text-body">回頭客專屬：滿$200折$30，今日限定</div>
+          </div>
+          <div class="notif-time">${timeStr}</div>
+        </div>
+        <div class="mini-chat-body">
+          <div style="display:flex;gap:6px;align-items:flex-start;">
+            <div class="mini-avatar" style="background:#7c6af7">🤖</div>
+            <div class="mini-carpool-card">
+              <div class="mini-carpool-header" style="background:#7c6af7">💌 好久不見！</div>
+              <div class="mini-carpool-body">
+                您已超過 3 天沒來點餐囉～
+                <div class="mini-carpool-timer" style="background:#f0eeff;color:#7c6af7">🎁 回頭客折$30（COMEBACK30）</div>
+                <div style="font-size:10px;color:#999;">優惠限今日，滿$200使用</div>
+              </div>
+              <div class="mini-carpool-footer">
+                <button class="mini-carpool-btn" style="background:#7c6af7">立即點餐 🍱</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function cancelOrder() {
+  document.querySelectorAll('.flex-btn').forEach(b => b.disabled = true);
+  addUserMsg('取消');
+  setTimeout(() => {
+    addBotMsg('好的，已取消本次訂單。\n如需重新點餐，請直接告訴我！😊');
+  }, 500);
+  addLog('warn', '使用者取消訂單');
+  scrollChat();
+}
+
+function addMsg(text) {
+  document.getElementById('chatInput').value = text;
+  sendMsg();
+}
+
+function addUserMsg(text) {
+  const html = `
+    <div class="msg user">
+      <div class="msg-bubble">${text.replace(/\n/g,'<br>')}</div>
+    </div>
+  `;
+  document.getElementById('chatBody').insertAdjacentHTML('beforeend', html);
+  scrollChat();
+}
+
+function addBotMsg(text) {
+  const html = `
+    <div class="msg bot">
+      <div class="msg-avatar">🤖</div>
+      <div class="msg-bubble">${text.replace(/\n/g,'<br>')}</div>
+    </div>
+  `;
+  document.getElementById('chatBody').insertAdjacentHTML('beforeend', html);
+  scrollChat();
+}
+
+function showTyping() {
+  const id = 'typing_' + Date.now();
+  const html = `
+    <div class="msg bot" id="${id}">
+      <div class="msg-avatar">🤖</div>
+      <div class="typing"><span></span><span></span><span></span></div>
+    </div>
+  `;
+  document.getElementById('chatBody').insertAdjacentHTML('beforeend', html);
+  scrollChat();
+  return id;
+}
+
+function removeTyping(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+function scrollChat() {
+  const body = document.getElementById('chatBody');
+  body.scrollTop = body.scrollHeight;
+}
+
+// ─── CARPOOL DEMO ───
+async function runCarpoolDemo() {
+  resetSteps();
+  document.getElementById('carpoolDemoBtn').disabled = true;
+  document.getElementById('carpoolDemoBtn').textContent = '執行中...';
+
+  const carpoolRecipients = [
+    { name: '林小美', emoji: '👩', lastOrder: '3天前', reply: '好的，我要加點一個排骨飯！' },
+    { name: '王大偉', emoji: '👨', lastOrder: '5天前', reply: null },
+    { name: '張阿花', emoji: '👵', lastOrder: '7天前', reply: '太好了！幫我加一個魯肉飯謝謝' },
+  ];
+
+  // Steps 1–4
+  for (let num = 1; num <= 4; num++) {
+    await sleep(1100);
+    activateStep(num);
+    document.getElementById('carpoolProgress').style.width = (num * 20) + '%';
+    document.getElementById(`stepCode${num}`).style.display = 'block';
+    addLog('info', `Step ${num} 完成`);
+  }
+
+  // Step 5 — show target list first
+  await sleep(1100);
+  activateStep(5);
+  document.getElementById('carpoolProgress').style.width = '90%';
+
+  const targetsEl = document.getElementById('carpoolTargets');
+  targetsEl.style.display = 'block';
+  targetsEl.innerHTML = carpoolRecipients.map(r => `
+    <div class="notif-item" id="notif_${r.name}">
+      <div class="notif-avatar">${r.emoji}</div>
+      <div><div class="notif-name">${r.name}</div><div class="notif-detail">上次點餐：${r.lastOrder}</div></div>
+      <div class="notif-status"><span class="badge badge-pending" id="badge_${r.name}">待推播</span></div>
+    </div>
+  `).join('');
+
+  // Show phones panel
+  document.getElementById('carpoolPhonesWaiting').style.display = 'none';
+  document.getElementById('carpoolPhonesBadge').style.display = 'inline-block';
+  const grid = document.getElementById('carpoolPhonesGrid');
+  grid.style.display = 'flex';
+
+  // Send to each recipient with animation
+  for (let i = 0; i < carpoolRecipients.length; i++) {
+    const r = carpoolRecipients[i];
+    await sleep(700);
+
+    // Update badge in left panel
+    const badge = document.getElementById(`badge_${r.name}`);
+    if (badge) {
+      badge.className = 'badge badge-confirmed';
+      badge.textContent = '已推播 ✓';
+    }
+
+    addLog('push', `✓ 推播成功 → ${r.name}`);
+    updateStat('push', 1);
+
+    // Add push log
+    state.pushLogs.push({
+      id: state.pushIdCounter++,
+      user: r.name,
+      type: 'carpool',
+      route: '路線A',
+      time: new Date().toLocaleTimeString('zh-TW'),
+    });
+    updateDbPushLogs();
+
+    // Render phone in right panel
+    const wrap = document.createElement('div');
+    wrap.innerHTML = buildCarpoolPhone(r, i);
+    grid.appendChild(wrap);
+
+    // Simulate user reply after a delay
+    if (r.reply) {
+      await sleep(2200);
+      const replyZone = document.getElementById(`cpChat_${i}`);
+      if (replyZone) {
+        const replyEl = document.createElement('div');
+        replyEl.style.cssText = 'display:flex;justify-content:flex-end;margin-top:8px;';
+        replyEl.innerHTML = `<div style="background:#06C755;color:white;border-radius:14px 4px 14px 14px;padding:8px 12px;font-size:12px;max-width:80%;animation:msgIn 0.3s ease;">${r.reply}</div>`;
+        replyZone.appendChild(replyEl);
+        addLog('success', `${r.name} 回覆加點！`);
+      }
+    }
+  }
+
+  document.getElementById('carpoolProgress').style.width = '100%';
+  document.getElementById('carpoolPhonesBadge').textContent = '推播完成 ✓';
+  document.getElementById('carpoolPhonesBadge').style.background = 'rgba(0,212,170,0.2)';
+  document.getElementById('carpoolPhonesBadge').style.color = 'var(--accent)';
+  updateStat('carpool', 1);
+  addLog('info', 'Step 5 完成');
+  showToast('🚗 順風車推播完成', '3 位顧客已收到通知，2 位回覆加點！');
+
+  document.getElementById('carpoolDemoBtn').disabled = false;
+  document.getElementById('carpoolDemoBtn').textContent = '▶ 再執行一次';
+}
+
+function buildCarpoolPhone(r, idx) {
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' });
+  return `
+    <div>
+      <div class="recipient-label" style="margin-bottom:8px;">
+        <span style="font-size:16px;">${r.emoji}</span>
+        <span style="font-weight:700;color:var(--text);">${r.name}</span>
+        <span style="color:var(--muted);font-size:11px;">· 上次點餐 ${r.lastOrder}</span>
+      </div>
+      <div class="mini-phone">
+        <!-- Status bar -->
+        <div class="mini-phone-bar">
+          <span>${timeStr}</span>
+          <span style="display:flex;gap:4px;align-items:center;">
+            <span style="font-size:9px;">●●●●</span> 📶 🔋
+          </span>
+        </div>
+        <!-- Lock screen notification banner -->
+        <div style="background:#1c1c1e;padding:10px 12px;">
+          <div style="font-size:10px;color:#888;margin-bottom:6px;">🔒 鎖定畫面</div>
+          <div class="notif-banner" style="border-radius:12px;overflow:hidden;">
+            <div class="notif-icon">🍱</div>
+            <div style="flex:1;min-width:0;">
+              <div class="notif-text-app">美味快送 · LINE</div>
+              <div class="notif-text-title">🚗 順風車免運加點！</div>
+              <div class="notif-text-body">路線A 今日出發前 75 分鐘截單，加入享免運費 🎉</div>
+            </div>
+            <div class="notif-time">${timeStr}</div>
+          </div>
+        </div>
+        <!-- LINE chat view -->
+        <div style="background:#c8d5e8;padding:10px 10px 12px;">
+          <div style="font-size:10px;color:#555;text-align:center;margin-bottom:8px;background:rgba(0,0,0,0.08);border-radius:8px;padding:3px 8px;width:fit-content;margin:0 auto 8px;">美味快送</div>
+          <div id="cpChat_${idx}" style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;gap:6px;align-items:flex-end;">
+              <div style="width:28px;height:28px;border-radius:50%;background:#06C755;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">🍱</div>
+              <div style="background:white;border-radius:4px 14px 14px 14px;overflow:hidden;max-width:240px;box-shadow:0 2px 8px rgba(0,0,0,0.12);">
+                <div style="background:linear-gradient(135deg,#ff6b35,#ff8c42);padding:9px 12px;color:white;font-size:13px;font-weight:700;">
+                  🚗 順風車免運加點
+                </div>
+                <div style="padding:10px 12px;font-size:12px;color:#333;line-height:1.6;">
+                  加入今日配送享<strong style="color:#ff6b35;">免運費</strong>優惠 🎉
+                  <div style="background:#fff3ee;border-radius:6px;padding:6px 8px;margin:7px 0;font-size:11px;font-weight:600;color:#ff6b35;">
+                    ⏰ 距截單還有 75 分鐘
+                  </div>
+                  <div style="font-size:11px;color:#888;">
+                    今日推薦：<br>
+                    • 雞腿飯 $110 (剩18份)<br>
+                    • 排骨飯 $100 (剩15份)<br>
+                    • 魯肉飯 $65 (剩30份)
+                  </div>
+                </div>
+                <div style="padding:8px 12px;border-top:1px solid #f0f0f0;">
+                  <div style="width:100%;padding:9px;background:linear-gradient(135deg,#ff6b35,#ff8c42);color:white;border:none;border-radius:8px;font-weight:700;font-size:12px;text-align:center;cursor:pointer;">
+                    立即加點 🛵
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function resetSteps() {
+  for (let i = 1; i <= 5; i++) {
+    const numEl = document.getElementById(`stepNum${i}`);
+    if (numEl) { numEl.className = 'flow-num'; numEl.textContent = i; }
+    const code = document.getElementById(`stepCode${i}`);
+    if (code) code.style.display = 'none';
+  }
+  const targets = document.getElementById('carpoolTargets');
+  if (targets) { targets.style.display = 'none'; targets.innerHTML = ''; }
+  document.getElementById('carpoolProgress').style.width = '0%';
+  // Reset phone panel
+  document.getElementById('carpoolPhonesWaiting').style.display = 'block';
+  document.getElementById('carpoolPhonesGrid').style.display = 'none';
+  document.getElementById('carpoolPhonesGrid').innerHTML = '';
+  document.getElementById('carpoolPhonesBadge').style.display = 'none';
+  document.getElementById('carpoolPhonesBadge').style.background = 'rgba(255,107,53,0.2)';
+  document.getElementById('carpoolPhonesBadge').style.color = 'var(--accent2)';
+  document.getElementById('carpoolPhonesBadge').textContent = '推播中...';
+}
+
+function activateStep(n) {
+  for (let i = 1; i < n; i++) {
+    document.getElementById(`stepNum${i}`).className = 'flow-num done';
+    document.getElementById(`stepNum${i}`).textContent = '✓';
+  }
+  document.getElementById(`stepNum${n}`).className = 'flow-num active';
+}
+
+// ─── DB UPDATES ───
+function updateDbOrders() {
+  if (state.orders.length === 0) return;
+  document.getElementById('dbOrders').innerHTML = state.orders.map((o, i) => `
+    <tr class="${i === state.orders.length - 1 ? 'new-row' : ''}">
+      <td>#${o.id}</td>
+      <td>${o.user}</td>
+      <td>${o.route}</td>
+      <td style="font-size:11px">${o.items}</td>
+      <td>$${o.amount}</td>
+      <td><span class="badge badge-${o.status}">${o.status}</span></td>
+      <td style="color:${o.baseline ? 'var(--accent)' : 'var(--muted)'}">${o.baseline ? '✓' : '—'}</td>
+      <td style="color:var(--muted);font-size:10px">${o.time}</td>
+    </tr>
+  `).join('');
+}
+
+function updateDbPushLogs() {
+  if (state.pushLogs.length === 0) return;
+  document.getElementById('dbPushLogs').innerHTML = state.pushLogs.map((p, i) => `
+    <tr class="${i === state.pushLogs.length - 1 ? 'new-row' : ''}">
+      <td>#${p.id}</td>
+      <td>${p.user}</td>
+      <td><span style="color:var(--accent2)">${p.type}</span></td>
+      <td>${p.route}</td>
+      <td style="color:var(--muted);font-size:10px">${p.time}</td>
+    </tr>
+  `).join('');
+}
+
+// ─── STATS ───
+function updateStat(key, delta) {
+  state.stats[key] += delta;
+  const map = { orders: 'statOrders', revenue: 'statRevenue', push: 'statPush', carpool: 'statCarpool' };
+  const el = document.getElementById(map[key]);
+  if (key === 'revenue') {
+    el.textContent = '$' + state.stats[key];
+  } else {
+    el.textContent = state.stats[key];
+  }
+  el.style.animation = 'none';
+  el.offsetHeight;
+  el.style.animation = 'pulse 0.3s ease';
+}
+
+// ─── LOG ───
+function addLog(type, msg) {
+  const stream = document.getElementById('logStream');
+  const time = new Date().toLocaleTimeString('zh-TW');
+  const entry = document.createElement('div');
+  entry.className = `log-entry log-${type}`;
+  entry.innerHTML = `<span class="log-time">${time}</span>${msg}`;
+  stream.appendChild(entry);
+  stream.scrollTop = stream.scrollHeight;
+
+  // Keep last 50 entries
+  while (stream.children.length > 50) {
+    stream.removeChild(stream.firstChild);
+  }
+}
+
+// ─── TOAST ───
+function showToast(title, body) {
+  document.getElementById('toastTitle').textContent = title;
+  document.getElementById('toastBody').textContent = body;
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
+// ─── UTILS ───
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+// ─── START ───
+init();
+</script>
+</body>
+</html>
